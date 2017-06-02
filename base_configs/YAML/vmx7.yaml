@@ -1,0 +1,30 @@
+hostname: vmx7
+bgp_asn: 65000
+interfaces:
+- name: ge-0/0/0
+  description: ge-0-0-0:vmx8
+  ip4_addr: 10.1.0.0/31
+  ip6_addr: 2001:db8::10:1:0:1/127
+  apply_groups: 
+  - BB-INT-BASE
+- name: ge-0/0/1
+  description: ge-0-0-1:vmx9
+  ip4_addr: 10.1.1.0/31
+  ip6_addr: 2001:db8::10:1:1:0/127
+  apply_groups:
+  - BB-INT-BASE
+fxp0_addr: 10.0.0.37/24
+lo_ip4_addr: 10.255.0.7
+lo_ip6_addr: 2001:db8::10:255:0:7
+lo_iso_addr: 49.0001.0102.5500.0007.00
+ibgp_peers:
+- description: vmx8
+  ip4_addr: 10.255.0.8
+  ip6_addr: 2001:db8::10:255:0:8
+- description: vmx9
+  ip4_addr: 10.255.0.9
+  ip6_addr: 2001:db8::10:255:0:9
+spine_peers: []
+isis_interfaces:
+- ge-0/0/0.0
+- ge-0/0/1.0
