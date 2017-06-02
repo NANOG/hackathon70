@@ -1,0 +1,85 @@
+set groups global system login user ntc uid 2000
+set groups global system login user ntc class super-user
+set groups global system login user ntc authentication encrypted-password "$5$9dE0bRr9$.VvWkJKa3J7HW95.G3KxW9x01nUoVi0PnXuZBlpOUH9"
+set groups ISIS-INTERFACE protocols isis interface <*> point-to-point
+set groups ISIS-INTERFACE protocols isis interface <*> level 2 metric 10
+set groups INT-BASE interfaces <*> unit 0 family iso
+set groups INT-BASE interfaces <*> unit 0 family mpls
+set groups BB-INT-BASE interfaces <*> unit 0 family iso
+set groups BB-INT-BASE interfaces <*> unit 0 family mpls
+set apply-groups global
+set system host-name {{ hostname }}
+set system domain-name ntc.com
+set system root-authentication encrypted-password "$5$1FR588oW$dWnmaj9S4t/GHEYL/gn8tOz3.yXoIMYHrCDyn.4hIo0"
+set system services ssh
+set system services netconf ssh
+set system syslog user * any emergency
+set system syslog file messages any notice
+set system syslog file messages authorization info
+set system syslog file interactive-commands interactive-commands any
+{% for interface in interfaces %}
+{% for apply_group in interface.apply_groups %}
+set interfaces {{ interface.name }} apply-groups {{ apply_group }}
+{% endfor %}
+set interfaces {{ interface.name }} description {{ interface.description }}
+set interfaces {{ interface.name }} unit 0 family inet address {{ interface.ip4_addr }}
+set interfaces {{ interface.name }} unit 0 family inet6 address {{ interface.ip6_addr }}
+{% endfor %}
+set interfaces lo0 unit 0 family inet address {{ lo_ip4_addr }}/32
+set interfaces lo0 unit 0 family iso address {{ lo_iso_addr }}
+set interfaces lo0 unit 0 family inet6 address {{ lo_ip6_addr }}/128
+set snmp community public authorization read-only
+set snmp community networktocode authorization read-only
+set routing-options rib inet6.0 static route ::/0 discard
+set routing-options static route 0.0.0.0/0 next-hop 10.0.0.2
+set routing-options autonomous-system {{ bgp_asn }}
+set routing-options forwarding-table export ECMP
+set protocols bgp group IBGP type internal
+set protocols bgp group IBGP local-address {{ lo_ip4_addr }}
+set protocols bgp group IBGP family inet unicast
+set protocols bgp group IBGP export IBGP-OUT
+set protocols bgp group IBGP-V6 type internal
+set protocols bgp group IBGP-V6 local-address {{ lo_ip6_addr }}
+set protocols bgp group IBGP-V6 family inet6 unicast
+set protocols bgp group IBGP-V6 export IBGP-OUT
+{% for ibgp_peer in ibgp_peers %}
+set protocols bgp group IBGP neighbor {{ ibgp_peer.ip4_addr }} description {{ ibgp_peer.description }}
+set protocols bgp group IBGP-V6 neighbor {{ ibgp_peer.ip6_addr }} description {{ ibgp_peer.description }}
+{% endfor %}
+set protocols bgp group DC type external
+set protocols bgp group DC family inet unicast
+set protocols bgp group DC peer-as 65001
+set protocols bgp group DC multipath
+set protocols bgp group DC export DC-OUT
+set protocols bgp group DC-V6 type external
+set protocols bgp group DC-V6 family inet6 unicast
+set protocols bgp group DC-V6 peer-as 65001
+set protocols bgp group DC-V6 multipath
+set protocols bgp group DC-V6 export DC-V6-OUT
+{% for spine_peer in spine_peers %}
+set protocols bgp group DC neighbor {{ spine_peer.ip4_addr }} description {{ spine_peer.description }}
+set protocols bgp group DC-V6 neighbor {{ spine_peer.ip6_addr }} description {{ spine_peer.description }}
+{% endfor %}
+set protocols isis apply-groups ISIS-INTERFACE
+set protocols isis level 2 wide-metrics-only
+set protocols isis level 1 disable
+{% for isis_int in isis_interfaces %}
+set protocols isis interface {{ isis_int }}
+{% endfor %}
+set protocols isis interface lo0.0
+set protocols lldp port-id-subtype interface-name
+set protocols lldp interface all
+set policy-options policy-statement DC-OUT term DEFAULT from protocol static
+set policy-options policy-statement DC-OUT term DEFAULT from route-filter 0.0.0.0/0 exact
+set policy-options policy-statement DC-OUT term DEFAULT then accept
+set policy-options policy-statement DC-OUT then reject
+set policy-options policy-statement DC-V6-OUT term DEFAULT from protocol static
+set policy-options policy-statement DC-V6-OUT term DEFAULT from route-filter ::0/0 exact
+set policy-options policy-statement DC-V6-OUT term DEFAULT then accept
+set policy-options policy-statement DC-V6-OUT then reject
+set policy-options policy-statement ECMP then load-balance per-packet
+set policy-options policy-statement IBGP-OUT term CONN from protocol direct
+set policy-options policy-statement IBGP-OUT term CONN then accept
+set policy-options policy-statement IBGP-OUT term BGP from protocol bgp
+set policy-options policy-statement IBGP-OUT term BGP then accept
+set policy-options policy-statement IBGP-OUT then reject

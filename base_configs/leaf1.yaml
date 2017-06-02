@@ -1,0 +1,24 @@
+hostname: eos-leaf1
+interfaces:
+- name: Ethernet1
+  description: Ethernet1:eos-spine1
+  ip4_addr: 10.16.0.1/31
+  ip6_addr: 2001:db8:1::10:16:0:1/127
+- name: Ethernet2
+  description: Ethernet1:eos-spine2
+  ip4_addr: 10.16.2.1/31
+  ip6_addr: 2001:db8:1::10:16:2:1/127
+- name: Ethernet3
+  description: rack1
+  ip4_addr: 10.16.128.1/24
+  ip6_addr: 2001:db8:1:128::1/64
+lo_ip4_addr: 10.16.33.1/32
+lo_ip6_addr: 2001:db8:1::10:33:0:1/128
+mgmt_addr: 10.0.0.21
+spine_peers:
+- description: eos-spine1
+  ip4_peer_addr: 10.16.0.0
+  ip6_peer_addr: 2001:db8:1::10:16:0:0
+- description: eos-spine2
+  ip4_peer_addr: 10.16.2.0
+  ip6_peer_addr: 2001:db8:1::10:16:2:0
