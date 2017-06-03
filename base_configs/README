@@ -9,7 +9,7 @@ To apply configurations to lab devices (and override existing configuration, fir
 to the device. copying the file to /var/tmp works fine for both JunOS and EOS.
 
 To apply:
-JunOS: run the following commands from exec mode:
+JunOS VMX devices: run the following commands from exec mode:
 
 # Enter configure mode
 configure
@@ -25,7 +25,7 @@ commit check
 # Exit out of config mode
 exit
 
-vEOS devices: run from command mode:
+Arista vEOS devices: run from command mode:
 # Backup existing config to file 
 copy running-config file:/tmp/backup.conf
 # Apply uploaded config - "replace" keyword wipes existing config before applying.
