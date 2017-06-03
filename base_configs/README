@@ -1,0 +1,38 @@
+Configs for lab environment are expressed as templates (in TEMPLATES dir) that call data from per-device YAML files.
+Generated configs are present in the CONFIGS directory.
+
+If an update to a YAML file is needed, rerun the config generator like so:
+
+./template_gen.py TEMPLATES/$template_file YAML/$yaml_file > CONFIGS > $device.conf
+
+To apply configurations to lab devices (and override existing configuration, first scp the configuration file
+to the device. copying the file to /var/tmp works fine for both JunOS and EOS.
+
+To apply:
+JunOS: run the following commands from exec mode:
+
+# Enter configure mode
+configure
+# Wipe existing configuration
+load factory-default
+# Apply new config
+load set /path/to/config
+# Commit config with timed rollback
+commit confirmed 3
+# Verify you still have terminal and confirm the config change. If you lock yourself out or otherwise
+# fail to confirm, the commit will automatically roll back after 3 minutes.
+commit check
+# Exit out of config mode
+exit
+
+vEOS devices: run from command mode:
+# Backup existing config to file 
+copy running-config file:/tmp/backup.conf
+# Apply uploaded config - "replace" keyword wipes existing config before applying.
+configure replace file:/path/to/configfile
+# Verify you still have a command line, then save
+wr mem
+
+# If you lose your ssh session and get locked out, you'll need to console in via NetworkToCode's
+# console UI, and from there restore the backup config via:
+configure replace file:/tmp/backup.conf
