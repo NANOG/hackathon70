@@ -1,0 +1,56 @@
+hostname: vmx9
+bgp_asn: 65000
+interfaces:
+- name: ge-0/0/0
+  description: eth4:spine1
+  ip4_addr: 10.2.4.0/31
+  ip6_addr: 2001:db8::10:2:4:0/127
+  apply_groups: []
+- name: ge-0/0/1
+  description: ge-0-0-1:vmx7
+  ip4_addr: 10.1.1.1/31
+  ip6_addr: 2001:db8::10:1:1:1/127
+  apply_groups:
+  - BB-INT-BASE
+- name: ge-0/0/2
+  description: eth4:spine2
+  ip4_addr: 10.2.5.0/31
+  ip6_addr: 2001:db8::10:2:5:0/127
+  apply_groups: []
+- name: ge-0/0/3
+  description: eth4:spine3
+  ip4_addr: 10.2.6.0/31
+  ip6_addr: 2001:db8::10:2:6:0/127
+  apply_groups: []
+- name: ge-0/0/4
+  description: eth3:spine4
+  ip4_addr: 10.2.7.0/31
+  ip6_addr: 2001:db8::10:2:7:0/127
+  apply_groups: []
+fxp0_addr: 10.0.0.39/24
+default_gateway: 10.0.0.2
+lo_ip4_addr: 10.255.0.9
+lo_ip6_addr: 2001:db8::10:255:0:9
+lo_iso_addr: 49.0001.0102.5500.0009.00
+ibgp_peers:
+- description: vmx7
+  ip4_addr: 10.255.0.7
+  ip6_addr: 2001:db8::10:255:0:7
+- description: vmx9
+  ip4_addr: 10.255.0.8
+  ip6_addr: 2001:db8::10:255:0:8
+spine_peers:
+- description: spine1
+  ip4_addr: 10.2.4.1
+  ip6_addr: 2001:db8::10:2:4:1
+- description: spine2
+  ip4_addr: 10.2.5.1
+  ip6_addr: 2001:db8::10:2:5:1
+- description: spine3
+  ip4_addr: 10.2.6.1
+  ip6_addr: 2001:db8::10:2:6:1
+- description: spine4
+  ip4_addr: 10.2.7.1
+  ip6_addr: 2001:db8::10:2:7:1
+isis_interfaces:
+- ge-0/0/1.0

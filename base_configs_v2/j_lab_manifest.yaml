@@ -1,0 +1,7 @@
+lab_user: ntc
+lab_password: ntc123
+devices:
+- name: vmx7
+  type: junos
+  role: bb
+  address: 35.166.115.157

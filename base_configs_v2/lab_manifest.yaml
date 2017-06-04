@@ -1,0 +1,47 @@
+lab_user: ntc
+lab_password: ntc123
+devices:
+- name: vmx7
+  type: junos
+  role: bb
+  address: 35.166.115.157
+- name: vmx8
+  type: junos
+  role: bb
+  address: 34.211.75.38
+- name: vmx9
+  type: junos
+  address: 34.210.211.249
+  role: bb
+- name: spine1
+  type: eos
+  role: spine
+  address: 52.88.192.154
+- name: spine2
+  type: eos
+  role: spine
+  address: 54.148.192.154
+- name: spine3
+  type: eos
+  role: spine
+  address: 34.210.219.110
+- name: spine4
+  type: eos
+  role: spine
+  address: 34.208.151.151
+- name: leaf1
+  type: eos
+  role: leaf
+  address: 35.166.154.25
+- name: leaf2
+  type: eos
+  role: leaf
+  address: 52.88.168.39
+- name: leaf3
+  type: eos
+  role: leaf
+  address: 52.88.133.167
+- name: leaf4
+  type: eos
+  role: leaf
+  address: 35.160.47.177

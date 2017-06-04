@@ -1,0 +1,290 @@
+groups {
+    global {
+        system {
+            login {
+                user ntc {
+                    uid 2000;
+                    class super-user;
+                    authentication {
+                        encrypted-password "$5$9dE0bRr9$.VvWkJKa3J7HW95.G3KxW9x01nUoVi0PnXuZBlpOUH9"; ## SECRET-DATA
+                    }
+                }
+            }
+        }
+    }
+    ISIS-INTERFACE {
+        protocols {
+            isis {
+                interface <*> {
+                    point-to-point;
+                    level 2 metric 10;
+                }
+            }
+        }
+    }
+    INT-BASE {
+        interfaces {
+            <*> {
+                unit 0 {
+                    family iso;
+                    family mpls;
+                }
+            }
+        }
+    }
+    BB-INT-BASE {
+        interfaces {
+            <*> {
+                unit 0 {
+                    family iso;
+                    family mpls;
+                }
+            }
+        }
+    }
+    GSHUT {
+        policy-options {
+            policy-statement DC-OUT {
+                term <*> {
+                    then {
+                        community add GSHUT;
+                    }
+                }
+            }
+            policy-statement DC-V6-OUT {
+                term <*> {
+                    then {              
+                        community add GSHUT;
+                    }                   
+                }                       
+            }                           
+            policy-statement IBGP-OUT { 
+                term <*> {              
+                    then {              
+                        community add GSHUT;
+                    }                   
+                }                       
+            }                           
+        }                               
+    } 
+}
+apply-groups global;                    
+system {                                
+    host-name {{ hostname }};                     
+    domain-name ntc.com;                
+    root-authentication {               
+        encrypted-password "$5$1FR588oW$dWnmaj9S4t/GHEYL/gn8tOz3.yXoIMYHrCDyn.4hIo0"; ## SECRET-DATA
+    }                                   
+    services {                          
+        ssh;                            
+        netconf {                       
+            ssh;                        
+        }                               
+    }                                   
+    syslog {                            
+        user * {                        
+            any emergency;              
+        }                               
+        file messages {                 
+            any notice;                 
+            authorization info;         
+        }                               
+        file interactive-commands {     
+            interactive-commands any;   
+        }                               
+    }                                   
+}                                       
+interfaces {                            
+{% for interface in interfaces %}
+    {{ interface.name }} {                          
+        {% for apply_group in interface.apply_groups %}
+        apply-groups {{ apply_group }};       
+        {% endfor %}
+        description {{ interface.description }};      
+        unit 0 {                        
+            family inet {               
+                address {{ interface.ip4_addr }};    
+            }                           
+            family inet6 {              
+                address {{ interface.ip6_addr }};
+            }                           
+        }                               
+    }                                   
+{% endfor %}
+    fxp0 {                              
+        unit 0 {                        
+            family inet {               
+                address {{ fxp0_addr }};   
+            }                           
+        }                               
+    }                                   
+    lo0 {                               
+        unit 0 {                        
+            family inet {               
+                address {{ lo_ip4_addr }}/32;  
+            }                           
+            family iso {                
+                address {{ lo_iso_addr }};
+            }                           
+            family inet6 {              
+                address {{ lo_ip6_addr}}/128;
+            }                           
+        }                               
+    }                                   
+}                                       
+snmp {                                  
+    community public {                  
+        authorization read-only;        
+    }                                   
+    community networktocode {           
+        authorization read-only;        
+    }                                   
+}                                       
+routing-options {                       
+    rib inet6.0 {                       
+        static {                        
+            route ::/0 discard;         
+        }                               
+    }                                   
+    static {                            
+        route 0.0.0.0/0 next-hop {{ default_gateway }}; 
+    }                                   
+    autonomous-system {{ bgp_asn }};            
+    forwarding-table {                  
+        export ECMP;                    
+    }                                   
+}                                       
+protocols {                             
+    bgp {                               
+        group IBGP {                    
+            type internal;              
+            local-address {{ lo_ip4_addr }};   
+            import IBGP-IN;
+            family inet {               
+                unicast;                
+            }                           
+            export IBGP-OUT;            
+            {% for ibgp_peer in ibgp_peers %}
+            neighbor {{ ibgp_peer.ip4_addr }} {
+                description {{ ibgp_peer.description }};       
+            }
+            {% endfor %}
+        }
+        group IBGP-V6 {                 
+            type internal;              
+            local-address {{ lo_ip6_addr }};
+            import IBGP-IN;
+            family inet6 {              
+                unicast;                
+            }                           
+            export IBGP-OUT;            
+            {% for ibgp_peer in ibgp_peers %}
+            neighbor {{ ibgp_peer.ip6_addr }} {
+                description {{ ibgp_peer.description }};
+            }
+            {% endfor %}
+        }
+        group DC {                      
+            type external;              
+            import DC-IN;
+            family inet {               
+                unicast;                
+            }                           
+            export DC-OUT;              
+            peer-as 65001;              
+            multipath;                  
+            {% for spine_peer in spine_peers %}
+            neighbor {{ spine_peer.ip4_addr }} {
+                description {{ spine_peer.description }};
+            }
+            {% endfor %}
+        }                               
+        group DC-V6 {                   
+            type external;              
+            import DC-IN;
+            family inet6 {              
+                unicast;                
+            }                           
+            export DC-V6-OUT;           
+            peer-as 65001;              
+            multipath;                  
+            {% for spine_peer in spine_peers %}
+            neighbor {{ spine_peer.ip6_addr }} {
+                description {{ spine_peer.description }};
+            }
+            {% endfor %}
+        }
+    }                                   
+    isis {                              
+        apply-groups ISIS-INTERFACE;    
+        level 2 wide-metrics-only;      
+        level 1 disable;                
+        {% for isis_int in isis_interfaces %}
+        interface {{ isis_int }};
+        {% endfor %}
+        interface lo0.0;                
+    }                                   
+    lldp {                              
+        port-id-subtype interface-name; 
+        interface all;                  
+    }                                   
+}                                       
+policy-options {
+    policy-statement DC-IN {
+        term GSHUT {
+            from community GSHUT;
+            then {
+                local-preference 0;
+                accept;
+            }
+        }
+        then accept;
+    }
+    policy-statement DC-OUT {
+        term DEFAULT {
+            from {
+                protocol static;
+                route-filter 0.0.0.0/0 exact;
+            }
+            then accept;
+        }
+        then reject;
+    }
+    policy-statement DC-V6-OUT {
+        term DEFAULT {
+            from {
+                protocol static;
+                route-filter ::0/0 exact;
+            }
+            then accept;
+        }
+        then reject;
+    }
+    policy-statement ECMP {
+        then {
+            load-balance per-packet;
+        }
+    }
+    policy-statement IBGP-IN {
+        term GSHUT {                    
+            from community GSHUT;
+            then {
+                local-preference 0;
+                accept;
+            }
+        }
+        then accept;
+    }
+    policy-statement IBGP-OUT {         
+        term CONN {
+            from protocol direct;
+            then accept;
+        }
+        term BGP {
+            from protocol bgp;
+            then accept;
+        }
+        then reject;
+    }
+    community GSHUT members 65535:0;
+}
