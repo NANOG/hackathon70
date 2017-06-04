@@ -14,6 +14,7 @@ interfaces:
   apply_groups:
   - BB-INT-BASE
 fxp0_addr: 10.0.0.37/24
+default_gateway: 10.0.0.2
 lo_ip4_addr: 10.255.0.7
 lo_ip6_addr: 2001:db8::10:255:0:7
 lo_iso_addr: 49.0001.0102.5500.0007.00
