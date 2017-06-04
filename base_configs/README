@@ -8,15 +8,22 @@ If an update to a YAML file is needed, rerun the config generator like so:
 To apply configurations to lab devices (and override existing configuration, first scp the configuration file
 to the device. copying the file to /var/tmp works fine for both JunOS and EOS.
 
-To apply:
+To be safe, it's a good idea to double-check the fxp0/Management1 IP addresses and default gateways to make sure they
+match the applied configs (if it changes, you'll lock yourself out when you apply the new config).
+
+INSTRUCTIONS
+------------
+
 JunOS VMX devices: run the following commands from exec mode:
 
 # Enter configure mode
 configure
-# Wipe existing configuration
+# Clear existing configuration
 load factory-default
-# Apply new config
+# Apply new baseline config
 load set /path/to/config
+# Optional: view diff between prior baseline and new config
+show | compare
 # Commit config with timed rollback
 commit confirmed 3
 # Verify you still have terminal and confirm the config change. If you lock yourself out or otherwise
@@ -26,6 +33,7 @@ commit check
 exit
 
 Arista vEOS devices: run from command mode:
+
 # Backup existing config to file 
 copy running-config file:/tmp/backup.conf
 # Apply uploaded config - "replace" keyword wipes existing config before applying.
